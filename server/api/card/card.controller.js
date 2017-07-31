@@ -12,15 +12,12 @@ exports.createCard = function(req, res, next) {
         position: req.body.position
 	});
 
-	newCard.save(function(err, card) {
-		if(err) {
-      console.log(err);
-			return res.send(500);
-		}
-
-		// Update the corresponding list
-		// Lesson 2: Update the current list
-	});
+	newCard.save()
+		.then(card => {
+			listModel.findByIdAndUpdate(list,{ $push: {cards: card._id}})
+			.then( list=> res.status(201).json(card));
+		})
+		.catch(err => res.status(500).json({message:"Error al crear card"}));
 };
 
 exports.editCard = function(req, res ,next) {
@@ -53,10 +50,10 @@ exports.transferCard = function(req, res ,next) {
 				listModel.findByIdAndUpdate({ _id: targetList }, { $push: { cards: cardId }}).exec()
 			]).then(
 				(list) => {
-					return res.json({ message: 'card successfully updated', list: list })
+					return res.json({ message: 'card successfully updated', list: list });
 				},
 				(err) => {
-					return res.status(400).json({ message: 'unable to update refs', error: err })
+					return res.status(400).json({ message: 'unable to update refs', error: err });
 				}
 			);
 
@@ -68,7 +65,7 @@ exports.removeCard = function (req, res) {
         .findByIdAndRemove(req.params.id, function(err) {
             if (err) {
                 res.json({ message: 'impossible to remove the card', error: err });
-            };
+            }
 
             res.json({ message: 'card removed successfully' });
         });
